@@ -1,0 +1,39 @@
+# Core ML Libraries
+torch>=2.0.0
+transformers>=4.35.0
+accelerate>=0.24.0
+sentencepiece>=0.1.99
+bitsandbytes>=0.41.0  # For 4-bit quantization
+optimum>=1.14.0  # For memory-efficient attention
+
+# UI Framework
+gradio>=4.0.0
+
+# Voice Processing - HIGH QUALITY OPTIONS
+SpeechRecognition>=3.10.0
+edge-tts>=6.1.9  # Microsoft Edge TTS (much better than Piper!)
+TTS>=0.22.0  # Coqui TTS (optional, very high quality)
+faster-whisper>=0.9.0  # Fast, accurate speech recognition
+pyaudio>=0.2.13
+
+# Alternative: If Coqui has issues, uncomment these
+# pyttsx3>=2.90  # System TTS fallback
+# gTTS>=2.4.0  # Google TTS fallback
+
+# Screen Capture & Control
+pillow>=10.0.0
+pyautogui>=0.9.54
+mss>=9.0.0
+
+# Internet Access
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+duckduckgo-search>=3.9.0
+
+# File Processing
+pypdf2>=3.0.0
+python-docx>=1.0.0
+openpyxl>=3.1.0
+
+# Utilities
+python-dotenv>=1.0.0

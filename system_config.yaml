@@ -1,0 +1,167 @@
+# System Configuration - Optimized for:
+# AMD Ryzen 7 7800X3D, 64GB RAM, RTX 4080 16GB, Windows 11 Pro
+
+model:
+  name: "mlabonne/gemma-3-27b-it-abliterated"
+  
+  # Memory optimization for RTX 4080 (16GB VRAM)
+  quantization:
+    enabled: true
+    bits: 4  # 4-bit for best memory/quality balance
+    type: "nf4"  # Normalized float 4-bit
+    double_quant: true  # Extra compression
+    compute_dtype: "float16"
+  
+  # Context and memory settings - MAXIMIZED for your 64GB RAM!
+  context:
+    max_length: 16384  # 16K tokens = ~100-120 messages in memory!
+    default_length: 12288  # 12K default - still massive
+    reserve_for_response: 2048  # Room for long, detailed responses
+  
+  # GPU memory allocation
+  memory:
+    gpu_max: "15GB"  # Leave 1GB for Windows/other apps
+    cpu_max: "32GB"  # Use your ample system RAM
+    offload_folder: "model_offload"
+  
+  # Generation defaults
+  generation:
+    temperature: 0.7
+    top_p: 0.9
+    top_k: 50
+    repetition_penalty: 1.1
+  max_new_tokens: 512
+  
+  # Performance optimizations
+  performance:
+    use_cache: true  # Important for conversation flow
+    use_bettertransformer: true  # Memory-efficient attention
+    torch_compile: false  # Can enable after testing
+    flash_attention: false  # Not supported on 4080, use bettertransformer
+
+audio:
+  # TTS Priority (tries in order)
+  tts_engine: "edge"  # Options: "edge", "coqui", "system", "gtts"
+  
+  # Edge TTS settings (Microsoft - MUCH better than Piper)
+  edge:
+    voice: "en-US-AriaNeural"  # Natural female voice
+    # Other options:
+    # "en-US-GuyNeural" - Natural male
+    # "en-US-JennyNeural" - Friendly female
+    # "en-GB-SoniaNeural" - British female
+    # "en-GB-RyanNeural" - British male
+    rate: "+0%"  # Speech rate
+    volume: "+0%"  # Volume
+  
+  # Coqui TTS (very high quality, but slower)
+  coqui:
+    model: "tts_models/en/ljspeech/tacotron2-DDC"
+    # Alternative: "tts_models/en/vctk/vits" for multi-speaker
+  
+  # Speech Recognition
+  stt_engine: "faster-whisper"  # Options: "faster-whisper", "google", "sphinx"
+  
+  whisper:
+    model_size: "base"  # Options: tiny, base, small, medium, large
+    device: "cuda"
+    compute_type: "float16"
+    language: "en"
+
+memory:
+  # Chat history and context management
+  max_messages_in_memory: 100  # Per session
+  auto_save_interval: 5  # Save every N messages
+  
+  # Context file settings
+  max_context_files: 10  # Max files to load at once
+  context_token_budget: 2048  # Max tokens from context files
+  
+  # Long-term memory
+  enable_memory_extraction: true  # Auto-extract important info
+  memory_keywords:
+    - "my name is"
+    - "i like"
+    - "i prefer"
+    - "i hate"
+    - "remember that"
+    - "important:"
+    - "note:"
+    - "keep in mind"
+    - "always"
+    - "never"
+
+screen:
+  # Screen capture settings
+  default_screenshot_format: "png"
+  screenshot_quality: 95
+  max_screenshot_size: [1920, 1080]
+  
+  # Automation safety
+  require_confirmation: true  # Confirm before clicks/typing
+  allowed_actions: ["click", "type", "move", "scroll"]
+  restricted_areas: []  # Screen areas to avoid
+
+internet:
+  # Web search settings
+  search_engine: "duckduckgo"  # Options: "duckduckgo", "brave", "google"
+  max_search_results: 5
+  search_timeout: 10
+  
+  # Content fetching
+  fetch_timeout: 15
+  max_content_length: 10000  # Characters
+  user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+
+files:
+  # Upload/download settings
+  max_upload_size: 100  # MB
+  allowed_upload_types:
+    - ".txt"
+    - ".pdf"
+    - ".docx"
+    - ".xlsx"
+    - ".csv"
+    - ".json"
+    - ".py"
+    - ".js"
+    - ".html"
+    - ".css"
+    - ".md"
+  
+  # Context file settings
+  auto_create_context: true  # Auto-create context files from long convos
+  context_creation_threshold: 20  # Messages before suggesting context file
+
+ui:
+  # Interface settings
+  theme: "soft"  # Options: "soft", "default", "monochrome"
+  port: 7860
+  share: false  # Set true for external access
+  server_name: "127.0.0.1"
+  
+  # Chat display
+  max_chat_history_display: 50
+  show_timestamps: true
+  show_token_count: true
+
+security:
+  # Safety settings
+  enable_content_filtering: false  # It's abliterated model, but option there
+  require_screen_control_confirm: true
+  log_all_actions: true
+  
+system:
+  # Windows 11 specific optimizations
+  priority: "high"  # Process priority
+  power_plan: "high_performance"  # Recommend high performance mode
+  
+  # Monitoring
+  show_vram_usage: true
+  show_ram_usage: true
+  show_generation_speed: true  # Tokens/second
+  
+  # Paths
+  cache_dir: ".cache"
+  logs_dir: "logs"
+  temp_dir: "temp"
