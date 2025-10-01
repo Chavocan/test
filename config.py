@@ -1,6 +1,7 @@
 """
-Configuration Module
+Configuration Module - FIXED VERSION
 Handles all application settings and paths
+Now includes ALL missing attributes referenced in other modules
 """
 
 import os
@@ -8,10 +9,10 @@ import yaml
 from pathlib import Path
 
 class Config:
-    """Main configuration class"""
+    """Main configuration class with complete attribute set"""
     
     # Model settings
-    MODEL_NAME = "./model_cache"
+    MODEL_NAME = "mlabonne/gemma-3-27b-it-abliterated"
     
     # Directory paths
     BASE_DIR = Path(__file__).parent
@@ -67,6 +68,12 @@ class Config:
     WHISPER_DEVICE = "cuda"
     WHISPER_COMPUTE_TYPE = "float16"
     
+    # Screen settings - FIXED: Now defined!
+    SCREENSHOT_FORMAT = "png"
+    SCREENSHOT_QUALITY = 95
+    MAX_SCREENSHOT_SIZE = (1920, 1080)  # (width, height)
+    REQUIRE_SCREEN_CONFIRMATION = True
+    
     # UI settings
     UI_PORT = 7860
     UI_SERVER = "127.0.0.1"
@@ -80,6 +87,25 @@ class Config:
     FETCH_TIMEOUT = 15
     MAX_CONTENT_LENGTH = 10000
     USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+    
+    # File settings - FIXED: Now defined!
+    MAX_UPLOAD_SIZE = 100  # MB
+    ALLOWED_UPLOAD_TYPES = [
+        ".txt", ".pdf", ".docx", ".xlsx", ".csv", ".json",
+        ".py", ".js", ".html", ".css", ".md"
+    ]
+    AUTO_CREATE_CONTEXT = True
+    CONTEXT_CREATION_THRESHOLD = 20  # Messages before suggesting context file
+    
+    # Security settings - FIXED: Now defined!
+    ENABLE_CONTENT_FILTERING = False
+    LOG_ALL_ACTIONS = True
+    
+    # System settings - FIXED: Now defined!
+    PROCESS_PRIORITY = "high"
+    SHOW_VRAM_USAGE = True
+    SHOW_RAM_USAGE = True
+    SHOW_GENERATION_SPEED = True
     
     def __init__(self):
         """Initialize configuration and create directories"""
@@ -98,6 +124,11 @@ class Config:
         directories = [
             self.CHAT_HISTORY_DIR,
             self.CONTEXT_FILES_DIR,
+            self.CONTEXT_FILES_DIR / "personal",
+            self.CONTEXT_FILES_DIR / "projects",
+            self.CONTEXT_FILES_DIR / "learning",
+            self.CONTEXT_FILES_DIR / "reference",
+            self.CONTEXT_FILES_DIR / "auto_generated",
             self.UPLOADS_DIR,
             self.DOWNLOADS_DIR,
             self.LOGS_DIR,
@@ -115,7 +146,7 @@ class Config:
         
         if config_file.exists():
             try:
-                with open(config_file, 'r') as f:
+                with open(config_file, 'r', encoding='utf-8') as f:
                     user_config = yaml.safe_load(f)
                 
                 # Override defaults with user config
@@ -127,7 +158,7 @@ class Config:
                 self._safe_print("Using default configuration")
     
     def _apply_user_config(self, user_config):
-        """Apply user configuration from YAML"""
+        """Apply user configuration from YAML - ENHANCED with all sections"""
         
         # Model settings
         if 'model' in user_config:
@@ -139,11 +170,14 @@ class Config:
                 quant = model['quantization']
                 self.QUANTIZATION_BITS = quant.get('bits', self.QUANTIZATION_BITS)
                 self.QUANTIZATION_TYPE = quant.get('type', self.QUANTIZATION_TYPE)
+                self.USE_DOUBLE_QUANT = quant.get('double_quant', self.USE_DOUBLE_QUANT)
+                self.COMPUTE_DTYPE = quant.get('compute_dtype', self.COMPUTE_DTYPE)
             
             if 'context' in model:
                 ctx = model['context']
                 self.MAX_CONTEXT_LENGTH = ctx.get('max_length', self.MAX_CONTEXT_LENGTH)
                 self.DEFAULT_CONTEXT_LENGTH = ctx.get('default_length', self.DEFAULT_CONTEXT_LENGTH)
+                self.RESERVE_FOR_RESPONSE = ctx.get('reserve_for_response', self.RESERVE_FOR_RESPONSE)
             
             if 'memory' in model:
                 mem = model['memory']
@@ -157,6 +191,7 @@ class Config:
                 self.DEFAULT_TOP_P = gen.get('top_p', self.DEFAULT_TOP_P)
                 self.DEFAULT_TOP_K = gen.get('top_k', self.DEFAULT_TOP_K)
                 self.DEFAULT_MAX_TOKENS = gen.get('max_new_tokens', self.DEFAULT_MAX_TOKENS)
+                self.DEFAULT_REPETITION_PENALTY = gen.get('repetition_penalty', self.DEFAULT_REPETITION_PENALTY)
         
         # Audio settings
         if 'audio' in user_config:
@@ -174,6 +209,7 @@ class Config:
                 whisper = audio['whisper']
                 self.WHISPER_MODEL_SIZE = whisper.get('model_size', self.WHISPER_MODEL_SIZE)
                 self.WHISPER_DEVICE = whisper.get('device', self.WHISPER_DEVICE)
+                self.WHISPER_COMPUTE_TYPE = whisper.get('compute_type', self.WHISPER_COMPUTE_TYPE)
         
         # Memory settings
         if 'memory' in user_config:
@@ -181,6 +217,15 @@ class Config:
             self.MAX_MESSAGES_IN_MEMORY = mem.get('max_messages_in_memory', self.MAX_MESSAGES_IN_MEMORY)
             self.AUTO_SAVE_INTERVAL = mem.get('auto_save_interval', self.AUTO_SAVE_INTERVAL)
             self.MAX_CONTEXT_FILES = mem.get('max_context_files', self.MAX_CONTEXT_FILES)
+            self.CONTEXT_TOKEN_BUDGET = mem.get('context_token_budget', self.CONTEXT_TOKEN_BUDGET)
+        
+        # Screen settings - FIXED: Now loads from YAML!
+        if 'screen' in user_config:
+            screen = user_config['screen']
+            self.SCREENSHOT_FORMAT = screen.get('default_screenshot_format', self.SCREENSHOT_FORMAT)
+            self.SCREENSHOT_QUALITY = screen.get('screenshot_quality', self.SCREENSHOT_QUALITY)
+            self.MAX_SCREENSHOT_SIZE = tuple(screen.get('max_screenshot_size', list(self.MAX_SCREENSHOT_SIZE)))
+            self.REQUIRE_SCREEN_CONFIRMATION = screen.get('require_confirmation', self.REQUIRE_SCREEN_CONFIRMATION)
 
         # Internet settings
         if 'internet' in user_config:
@@ -191,6 +236,29 @@ class Config:
             self.FETCH_TIMEOUT = internet.get('fetch_timeout', self.FETCH_TIMEOUT)
             self.MAX_CONTENT_LENGTH = internet.get('max_content_length', self.MAX_CONTENT_LENGTH)
             self.USER_AGENT = internet.get('user_agent', self.USER_AGENT)
+        
+        # File settings - FIXED: Now loads from YAML!
+        if 'files' in user_config:
+            files = user_config['files']
+            self.MAX_UPLOAD_SIZE = files.get('max_upload_size', self.MAX_UPLOAD_SIZE)
+            self.ALLOWED_UPLOAD_TYPES = files.get('allowed_upload_types', self.ALLOWED_UPLOAD_TYPES)
+            self.AUTO_CREATE_CONTEXT = files.get('auto_create_context', self.AUTO_CREATE_CONTEXT)
+            self.CONTEXT_CREATION_THRESHOLD = files.get('context_creation_threshold', self.CONTEXT_CREATION_THRESHOLD)
+        
+        # Security settings - FIXED: Now loads from YAML!
+        if 'security' in user_config:
+            security = user_config['security']
+            self.ENABLE_CONTENT_FILTERING = security.get('enable_content_filtering', self.ENABLE_CONTENT_FILTERING)
+            self.REQUIRE_SCREEN_CONFIRMATION = security.get('require_screen_control_confirm', self.REQUIRE_SCREEN_CONFIRMATION)
+            self.LOG_ALL_ACTIONS = security.get('log_all_actions', self.LOG_ALL_ACTIONS)
+        
+        # System settings - FIXED: Now loads from YAML!
+        if 'system' in user_config:
+            system = user_config['system']
+            self.PROCESS_PRIORITY = system.get('priority', self.PROCESS_PRIORITY)
+            self.SHOW_VRAM_USAGE = system.get('show_vram_usage', self.SHOW_VRAM_USAGE)
+            self.SHOW_RAM_USAGE = system.get('show_ram_usage', self.SHOW_RAM_USAGE)
+            self.SHOW_GENERATION_SPEED = system.get('show_generation_speed', self.SHOW_GENERATION_SPEED)
         
         # UI settings
         if 'ui' in user_config:
@@ -212,13 +280,68 @@ class Config:
             "context_window": self.DEFAULT_CONTEXT_LENGTH
         }
     
-    def save_config_template(self):
-        """Save a template configuration file"""
-        template_path = self.BASE_DIR / "system_config.yaml.template"
+    def get_system_info(self):
+        """Get current system configuration info"""
+        import torch
         
-        if not template_path.exists():
-            # The template is already in system_config.yaml artifact
-            print("Template already exists as system_config.yaml")
+        info = {
+            "model_name": self.MODEL_NAME,
+            "context_window": f"{self.DEFAULT_CONTEXT_LENGTH:,} tokens",
+            "quantization": f"{self.QUANTIZATION_BITS}-bit {self.QUANTIZATION_TYPE}",
+            "tts_engine": self.TTS_ENGINE,
+            "stt_engine": self.STT_ENGINE,
+        }
+        
+        if torch.cuda.is_available():
+            info["gpu"] = torch.cuda.get_device_name(0)
+            info["gpu_memory"] = f"{torch.cuda.get_device_properties(0).total_memory / 1e9:.1f}GB"
+        else:
+            info["gpu"] = "CPU mode"
+        
+        return info
+    
+    def validate_config(self):
+        """Validate configuration and report issues"""
+        issues = []
+        
+        # Check if model path exists if it's a local path
+        if self.MODEL_NAME.startswith("./") or self.MODEL_NAME.startswith("../"):
+            model_path = Path(self.MODEL_NAME)
+            if not model_path.exists():
+                issues.append(f"⚠️ Model path does not exist: {self.MODEL_NAME}")
+                issues.append("   Will attempt to download from HuggingFace")
+        
+        # Check CUDA availability if GPU settings are configured
+        import torch
+        if not torch.cuda.is_available() and self.WHISPER_DEVICE == "cuda":
+            issues.append("⚠️ CUDA not available but Whisper set to 'cuda'")
+            issues.append("   Will fall back to CPU for speech recognition")
+        
+        # Check if directories exist
+        required_dirs = [
+            self.CHAT_HISTORY_DIR,
+            self.CONTEXT_FILES_DIR,
+            self.UPLOADS_DIR,
+            self.DOWNLOADS_DIR,
+            self.LOGS_DIR,
+            self.TEMP_DIR
+        ]
+        
+        for dir_path in required_dirs:
+            if not dir_path.exists():
+                issues.append(f"⚠️ Directory missing: {dir_path}")
+                issues.append(f"   Creating: {dir_path}")
+                dir_path.mkdir(parents=True, exist_ok=True)
+        
+        if issues:
+            self._safe_print("\n⚙️ Configuration Validation:")
+            for issue in issues:
+                self._safe_print(issue)
+            self._safe_print("")
+        else:
+            self._safe_print("✓ Configuration validated successfully")
+        
+        return len([i for i in issues if "⚠️" in i])
 
 # Global configuration instance
 config = Config()
